@@ -70,7 +70,7 @@
     <Compile Include="Assets\TensorFieldVis.cs" />
     <Compile Include="Assets\Testor.cs" />
     <Compile Include="Assets\Trace.cs" />
-    <Compile Include="Assets\Utils\DrawLine.cs" />
+    <Compile Include="Assets\Utils\Utils.cs" />
     <None Include="Assets\Packages\System.Memory.4.5.3\version.txt" />
     <None Include="Assets\Packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.xml" />
     <None Include="Assets\Packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.xml" />

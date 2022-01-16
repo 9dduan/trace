@@ -15,34 +15,57 @@ using MathNet.Numerics;
 // streamline
 // seed
 // seedPool
-public class Seed
-{
-    public Seed()
-    {
 
-    }
-}
 public enum EigenType
 {
       Major,
     Minor
 }
+
 public class SeedPoint
 {
+    public float PriorityValue { get; set; }
+
     public Coordinate Pos { get; set; } // position
 
-    public Coordinate Vec { get; set; } // direction
+    public Coordinate Dir { get; set; } // direction, sampled from pos in the tensor field
 
-    public EigenType eigenType { get; set;}
+    public EigenType EigenType { get; set;}
+
+    public SeedPoint(Coordinate pos, Coordinate dir,EigenType eigenType)
+    {
+        Pos = pos;
+        Dir = dir;
+        EigenType = eigenType;
+    }
 }
 
 public static class SeedProvider
 {
-    public static PriorityQueue<SeedPoint> seedqueue = new PriorityQueue<SeedPoint>(100,new seedComparor());
-
+    public static PriorityQueue<SeedPoint> seedqueue = new PriorityQueue<SeedPoint>(100,new SeedComparorWithRandomValue());
 }
 
-public class seedComparor : IComparer<SeedPoint>
+
+public class SeedComparor : IComparer<SeedPoint>
+{
+    public int Compare(SeedPoint p1,SeedPoint p2)
+    {
+        if (p1.PriorityValue > p2.PriorityValue)
+        {
+            return 1;
+        }
+        else if(p1.PriorityValue < p2.PriorityValue)
+        {
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+
+public class SeedComparorWithRandomValue : IComparer<SeedPoint>
 {
     public int Compare(SeedPoint x, SeedPoint y)
     {
@@ -101,7 +124,7 @@ public class StreamLine
             var tensor = m_tensorfield.SampleAtPos(pt).Normalize();
             Coordinate vec;
             tensor.EigenVectors(eigenType, out vec);
-            m_points.Add(new SeedPoint() { Pos = pt, Vec = vec, eigenType = eigenType });
+            m_points.Add(new SeedPoint(pt, vec, eigenType));
 
         }
         else
@@ -110,7 +133,7 @@ public class StreamLine
         }
     }
 
-    public int StepTrace() // todo do a enumerator
+    public int StepTrace()
     {
         if (m_points.Any())
         {
@@ -136,7 +159,7 @@ public class StreamLine
             {
                 GetNextPoint();
                 lineLength = m_polyline.Length;
-                Debug.Log($"current iteration:{i++},polyline length:{lineLength},max length:{MaxLength}"); // todo enclosure captured ??
+                Debug.Log($"current iteration:{i++},polyline length:{lineLength},max length:{MaxLength}"); 
             }
         }
     }
@@ -148,14 +171,14 @@ public class StreamLine
 
     private void GetNextPoint()
     {
-        SeedPoint nextPt = new SeedPoint();
+        SeedPoint nextPt = new SeedPoint(default(Coordinate),default(Coordinate),EigenType.Major);
 
         if (m_points.Any())
         {
             var prevPt = m_points.Last();
 
             // TODO consider if vector at sampled position is zero 
-            Coordinate step = Extension.Multiplication(prevPt.Vec, StepLength);
+            Coordinate step = Extension.Multiplication(prevPt.Dir, StepLength);
             Coordinate nextPos = Extension.Add(prevPt.Pos, step);
             Coordinate nextVec;
 
@@ -164,12 +187,12 @@ public class StreamLine
             Coordinate minor;
             tensor.EigenVectors(out major,out minor);
 
-            Coordinate corrected = prevPt.eigenType == EigenType.Major ? major : minor;
-            nextVec = IsAngleValid(corrected, prevPt.Vec) ? corrected : Extension.Reverse(corrected);
+            Coordinate corrected = prevPt.EigenType == EigenType.Major ? major : minor;
+            nextVec = IsAngleValid(corrected, prevPt.Dir) ? corrected : Extension.Reverse(corrected);
    
             nextPt.Pos = nextPos;
-            nextPt.eigenType = prevPt.eigenType;
-            nextPt.Vec = nextVec;
+            nextPt.EigenType = prevPt.EigenType;
+            nextPt.Dir = nextVec;
 
             m_points.Add(nextPt);
             SeedProvider.seedqueue.push(nextPt);
@@ -182,19 +205,13 @@ public class StreamLine
 
     }
         
-   
-
+  
     private bool IsAngleValid(Coordinate vec,Coordinate vec1)
     {
         double sqrxy = vec.X * vec1.X + vec.Y * vec1.Y;
         //double magsum = Math.Sqrt(vec.X * vec.X + vec.Y * vec.Y) * Math.Sqrt(vec1.X * vec1.X + vec1.Y + vec1.Y);
         //var ang = Math.Acos(sqrxy / magsum);
         return sqrxy >= 0;
-    }
-
-    public bool IsLineStringValid()
-    {
-        throw new NotImplementedException();
     }
 
 }

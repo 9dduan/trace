@@ -21,7 +21,7 @@ public static class TensorFieldProvider
         // grid
         double ang = (44f / 180f) * Math.PI;
         GridTensorField grid = new GridTensorField(ang, 1, 1);
-        return new ITensorField[] {rad, poly, grid};
+        return new ITensorField[] {poly};
     }
 }
 
@@ -31,8 +31,6 @@ public class TensorFieldVis : MonoBehaviour
     ITensorField toDraw;
     Coordinate[] pts;
     Coordinate[] vecs;
-    StreamLine streamLine;
-
 
     //visualize a tensorfield
     // Start is called before the first frame update

@@ -32,6 +32,11 @@ public class SeedPoint
     {
         Pos = pos;
     }
+
+    public override string ToString()
+    {
+        return $"{Pos.ToString()} PriorityValue {PriorityValue}";
+    }
 }
 
 public static class SeedProvider

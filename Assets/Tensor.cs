@@ -172,8 +172,8 @@ public struct Tensor
             double e1, e2;
             EigenValues(out e1, out e2);
 
-            major = new Coordinate((float)B, (float)(e1 - A));
-            minor = new Coordinate((float)B, (float)(e2 - A));
+            major = new Coordinate((float)B, (float)(e1 - A)).Normalize();
+            minor = new Coordinate((float)B, (float)(e2 - A)).Normalize();
         }
     }
 

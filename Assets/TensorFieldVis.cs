@@ -21,7 +21,7 @@ public static class TensorFieldProvider
         // grid
         double ang = (44f / 180f) * Math.PI;
         GridTensorField grid = new GridTensorField(ang, 1, 1);
-        return new ITensorField[] {poly};
+        return new ITensorField[] {poly,grid};
     }
 }
 

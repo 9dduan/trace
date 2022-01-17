@@ -222,6 +222,12 @@ public static class Extension
     {
         return new Coordinate(multiply * vec.X, multiply * vec.Y);
     }
+
+    public static Coordinate Normalize(this Coordinate vec)
+    {
+        double sqrtSum = Math.Sqrt(vec.X * vec.X + vec.Y * vec.Y);
+        return vec.Multiplication(1 / sqrtSum);
+    }
 }
 
 

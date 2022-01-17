@@ -28,15 +28,9 @@ public class SeedPoint
 
     public Coordinate Pos { get; set; } // position
 
-    public Coordinate Dir { get; set; } // direction, sampled from pos in the tensor field
-
-    public EigenType EigenType { get; set;}
-
-    public SeedPoint(Coordinate pos, Coordinate dir,EigenType eigenType)
+    public SeedPoint(Coordinate pos)
     {
         Pos = pos;
-        Dir = dir;
-        EigenType = eigenType;
     }
 }
 
@@ -75,8 +69,6 @@ public class SeedComparorWithRandomValue : IComparer<SeedPoint>
 }
 
 /*
-class for tracing a single stream line
-*/
 public class StreamLine
 {
     private List<SeedPoint> m_points;
@@ -215,3 +207,4 @@ public class StreamLine
     }
 
 }
+*/

@@ -60,16 +60,17 @@ namespace tracing.StreamLineVis
         {
             // initate conditions
             m_candidatesQueue.push(m_startingSeedPoint);
-            Coordinate prevDir = m_startingSeedPoint.Dir;
+            m_currentTracingEigenType = EigenType.Major; // init eigen type as major;
+            Coordinate prevDir = GetDirFromPt(m_startingSeedPoint.Pos, m_currentTracingEigenType);
 
             int maxInterative = 0;
             while (m_candidatesQueue.Count > 0 && maxInterative <5000)
             {
                 maxInterative += 1;
                 SeedPoint pt = m_candidatesQueue.pop();
+
                 m_currentTracingLine = new List<LineString>();
                 m_currentTracingLength = 0f;
-                m_currentTracingEigenType = pt.EigenType;
                 m_placedPoints.Insert(pt.Pos, pt);
                 
                 int count = 0;
@@ -85,13 +86,15 @@ namespace tracing.StreamLineVis
                         m_currentTracingLength += currSeg.Length;
                         m_currentTracingLine.Add(currSeg);
                         m_placedPoints.Insert(nextPt.Pos, nextPt);
-
-                        var newCandidates = GetCandiatePoints(nextPt);
+                        prevDir = GetDirFromPt(nextPt.Pos, m_currentTracingEigenType);
+                        pt = nextPt;
+                        var newCandidates = GetCandiatePoints(pt);
 
                         if (newCandidates.Any())
                         {
                             foreach(var c in newCandidates)
                             {
+                                //c.PriorityValue = 1f;
                                 m_candidatesQueue.push(c);
                             }
                         }
@@ -138,20 +141,15 @@ namespace tracing.StreamLineVis
 
         public List<SeedPoint> GetCandiatePoints(SeedPoint pt)
         {
-            // for now, return two seedPoints with perpendicular dir with given pt
-            List<SeedPoint> res = new List<SeedPoint>();
-            EigenType tp = pt.EigenType == EigenType.Major ? EigenType.Minor : EigenType.Major;
-            Coordinate dir;
-            m_combinedFields.SampleAtPos(pt.Pos).EigenVectors(tp, out dir);
-
-            foreach(var d in new Coordinate[] {dir, Extension.Reverse(dir)})
-            {
-                res.Add(new SeedPoint(pt.Pos, dir, tp) {PriorityValue =  GetPriorityValue(pt.Pos)});
-            }
-
-            return res;
+            var p = new SeedPoint(pt.Pos) { PriorityValue = (float)pt.Pos.Distance(new Coordinate(10, 10))};
+            return new List<SeedPoint>() { p};
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
         public float GetPriorityValue(Coordinate pos)
         {
             Coordinate centre = new Coordinate(10, 10);
@@ -159,20 +157,34 @@ namespace tracing.StreamLineVis
             return 1;
         }
 
-        public SeedPoint GetNextFromSeedPoint(SeedPoint pt, Coordinate prevDir)
+        public Coordinate GetDirFromPt(Coordinate pos, EigenType eigenType)
         {
             Coordinate dir;
-            m_combinedFields.SampleAtPos(pt.Pos).EigenVectors(pt.EigenType, out dir);
+            m_combinedFields.SampleAtPos(pos).EigenVectors(eigenType, out dir);
+            return dir;
+        }
 
+        public SeedPoint GetNextFromSeedPoint(SeedPoint prevPt, Coordinate prevDir)
+        {
             // if angle between dir and prevDir > 90, reverse dir
 
-            var nextpos = pt.Pos.Add(dir.Multiplication(m_stepLength));
+            var nextpos = prevPt.Pos.Add(prevDir.Multiplication(m_stepLength));
+
+           
+
+            return new SeedPoint(nextpos);
+        }
+
+        public Coordinate GetNextDir(SeedPoint pt,Coordinate prevDir)
+        {
+            Coordinate dir = GetDirFromPt(pt.Pos, m_currentTracingEigenType);
+
             if (!IsAngleValid(prevDir, dir))
             {
                 dir = Extension.Reverse(dir);
             }
 
-            return new SeedPoint(nextpos, dir, pt.EigenType);
+            return dir;
         }
 
         public LineString ModifySegment(LineString seg)
@@ -190,9 +202,8 @@ namespace tracing.StreamLineVis
     public class StreamLineVis : MonoBehaviour
     {
 
-        private List<StreamLine> streamLines;
+        
         private AddedField added;
-        private StreamLine curline;
         private RoadMapGenerator m_generator;
         //private SeedProvider provider;
 
@@ -211,9 +222,7 @@ namespace tracing.StreamLineVis
 
             var fields = new AddedField(TensorFieldProvider.GetTensorField());
             var pos = new Coordinate(6, 6);
-            Coordinate dir;
-            fields.SampleAtPos(pos).EigenVectors(EigenType.Major, out dir);
-            var startpt = new SeedPoint(pos, dir, EigenType.Major);
+            var startpt = new SeedPoint(pos);
             m_generator = new RoadMapGenerator(fields, startpt, 5, 60);
             m_generator.iterate();
             m_generator.Draw();
@@ -237,8 +246,10 @@ namespace tracing.StreamLineVis
 
         private void updatelines()
         {
+            /*
             if (curline.StepTrace() == 0)
             {
+                
                 var newStart = SeedProvider.seedqueue.pop();
                 var newStartType = newStart.EigenType == EigenType.Major ? EigenType.Minor : EigenType.Major;
                 var newStreamline = new StreamLine(2, 60f, added);
@@ -246,21 +257,18 @@ namespace tracing.StreamLineVis
                 streamLines.Add(newStreamline);
                 curline = newStreamline;
                 Debug.Log($"starting new line at {newStart.Pos.X}-{newStart.Pos.Y}");
+                
             }
             else
             {
                 // do nothing
             }
+            */
         }
 
         private IEnumerator waitforsec()
         {
             yield return new WaitForSeconds(1);
-        }
-
-        private void IterativeTrace()
-        {
-            
         }
     }
 }

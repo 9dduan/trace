@@ -14,14 +14,17 @@ public static class TensorFieldProvider
     public static ITensorField[] GetTensorField()
     {
         // rad
-        RadialTensorField radField = new RadialTensorField(new Coordinate(8, 10),2);
+        RadialTensorField radField = new RadialTensorField(new Coordinate(8, 10),0.1);
+
         // polyline
         Coordinate[] coords = new Coordinate[] { new Coordinate(0, 0), new Coordinate(8, 2), new Coordinate(20, 12), new Coordinate(40, 19),new Coordinate(41,25) };
         PolylineField polyField = new PolylineField(coords, 0.08);
+
         // grid
         double ang = (44f / 180f) * Math.PI;
         GridTensorField gridField = new GridTensorField(ang, 1, 0.1);
-        return new ITensorField[] { polyField, gridField };
+
+        return new ITensorField[] {gridField, polyField };
     }
 }
 

@@ -24,6 +24,8 @@ public enum EigenType
 
 public class SeedPoint
 {
+    public bool IsSeed { get; set; }
+
     public float PriorityValue { get; set; }
 
     public Coordinate Pos { get; set; } // position
@@ -35,11 +37,11 @@ public class SeedPoint
 
     public override string ToString()
     {
-        return $"{Pos.ToString()} PriorityValue {PriorityValue}";
+        return $"{Pos.ToString()} PriorityValue {PriorityValue} IsSeed {IsSeed}";
     }
 }
 
-public static class SeedProvider
+public static class RandomSeedProvider
 {
     public static PriorityQueue<SeedPoint> seedqueue = new PriorityQueue<SeedPoint>(100,new SeedComparorWithRandomValue());
 }

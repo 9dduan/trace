@@ -125,7 +125,7 @@ public struct Tensor
 
     public static Tensor operator+(Tensor left, Tensor right)
     {
-        return new Tensor(left.A + right.A, left.B + right.B);
+        return new Tensor(left.A + right.A, left.B + right.B); // how to validate if new tensor is valid?
     }
 
     public static Tensor operator*(double left, Tensor right)

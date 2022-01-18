@@ -21,13 +21,13 @@ public interface ITensorField
 // todo consider if radial field needs decay according with distance from sample point to center
 public class RadialTensorField :MonoBehaviour, ITensorField
 {
-    private Coordinate cent;
-    private double decay;
-    private bool isHidden = true;
+    private Coordinate m_cent;
+    private double m_decay;
+    private bool m_isHidden = true;
 
     public RadialTensorField (Coordinate _cent, double _decay=0)
     {
-        cent = _cent;
+        m_cent = _cent;
     }
     
     public void Combine(ITensorField tensorField)
@@ -37,23 +37,24 @@ public class RadialTensorField :MonoBehaviour, ITensorField
 
     public void DrawDebugShape()
     {
-        isHidden = false;
+        m_isHidden = false;
     }
 
     public Tensor SampleAtPos(Coordinate pos)
     {
-        Coordinate relativePos = new Coordinate(pos.X-cent.X, pos.Y-cent.Y);
-        double dist = relativePos.Distance(cent);
-        var decayCoeff = Math.Exp(-decay * dist * dist); // by default decayCoeff == 1
-        return Tensor.FromXY(relativePos);
+        Coordinate relativePos = new Coordinate(pos.X-m_cent.X, pos.Y-m_cent.Y);
+        double dist = pos.Distance(m_cent);
+        var decayCoeff = Math.Exp(-m_decay * dist * dist); // by default decayCoeff == 1
+        var tensor = Tensor.FromXY(relativePos).Normalize();
+        return decayCoeff*tensor;
     }
 
     void OnDrawGizmos()
     {
-        if (!isHidden)
+        if (!m_isHidden)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawSphere(Utils.CoordToVector3(cent), 0.2f);
+            Gizmos.DrawSphere(Utils.CoordToVector3(m_cent), 0.2f);
         }
     }
 }

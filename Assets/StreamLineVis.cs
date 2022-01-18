@@ -24,10 +24,11 @@ namespace tracing.StreamLineVis
         private double m_currentTracingLength; // if current
         private double m_stepLength;
         private double m_maxSingleTracingLength;
-        private Polygon m_boundary;
+        private LinearRing m_boundary;
         private int m_maxTracedLines;
+        private float m_snapThreshold;
 
-        public RoadMapGenerator(AddedField combinedFields, SeedPoint startPoint, double stepLength, double maxLength,int maxTracedLines=20)
+        public RoadMapGenerator(AddedField combinedFields, SeedPoint startPoint, LinearRing boundary, double stepLength, double maxLength,int maxTracedLines=20)
         {
             m_combinedFields = combinedFields;
             m_startingSeedPoint = startPoint;
@@ -37,6 +38,8 @@ namespace tracing.StreamLineVis
             m_placedPoints = new KdTree<SeedPoint>();
             m_generatedLines = new List<List<LineString>>();
             m_maxTracedLines = maxTracedLines;
+            m_boundary = boundary;
+            m_snapThreshold = 2f;
         }
 
         public void Draw()
@@ -74,11 +77,11 @@ namespace tracing.StreamLineVis
             m_candidatesQueue.push(m_startingSeedPoint);
             m_currentTracingEigenType = EigenType.Major;
             m_placedPoints.Insert(m_startingSeedPoint.Pos, m_startingSeedPoint);
-            int maxInterative = 0;
+            int iterativeCount = 0;
 
-            while (m_candidatesQueue.Count > 0 && maxInterative <m_maxTracedLines)
+            while (m_candidatesQueue.Count > 0 && iterativeCount <m_maxTracedLines)
             {
-                maxInterative += 1;
+                iterativeCount += 1;
                 SeedPoint currPt = m_candidatesQueue.pop();
                 Coordinate currDir = GetDirFromPosAndEigenType(currPt.Pos, m_currentTracingEigenType);
                 m_currentTracingLine = new List<LineString>();
@@ -90,13 +93,18 @@ namespace tracing.StreamLineVis
                 {
                     // trace current single streamline
                     count += 1;
-                    var nextPt = GetNextPoint(currPt,currDir);
+                    var nextPt = GetNextPoint(currPt, currDir);
+                    var nextDir = GetNextDir(nextPt, currDir);
                     LineString currSeg = new LineString(new Coordinate[] { currPt.Pos, nextPt.Pos });
+                    var modifiedSeg = ModifySegment(currSeg);
 
-                    if (IsSegmentValid(currSeg) && IsCurrentTracingValid(currSeg))
+                    if (modifiedSeg != null)
                     {
-                        m_currentTracingLength += currSeg.Length;
-                        m_currentTracingLine.Add(currSeg);
+                        nextPt = new SeedPoint(modifiedSeg[1]);
+                        nextDir = GetNextDir(nextPt, currDir);
+
+                        m_currentTracingLength += modifiedSeg.Length;
+                        m_currentTracingLine.Add(modifiedSeg);
                         m_placedPoints.Insert(nextPt.Pos, nextPt);
 
                         var newCandidates = GetCandiatePoints(nextPt);
@@ -105,14 +113,13 @@ namespace tracing.StreamLineVis
                         {
                             foreach(var c in newCandidates)
                             {
-                                //c.PriorityValue = 1f;
                                 m_candidatesQueue.push(c);
                                 Debug.Log($"pushing seed points in pq {c.ToString()}");
                             }
                         }
 
                         // update currPt and currDir
-                        currDir = GetDirFromPosAndEigenType(nextPt.Pos, m_currentTracingEigenType);
+                        currDir = nextDir;
                         currPt = nextPt;
                     }
                     else
@@ -146,14 +153,36 @@ namespace tracing.StreamLineVis
         /// <summary>
         /// if any part of seg is out side of boundary, reject it TODO: consider adding more
         /// </summary>
-        public bool IsSegmentValid(LineString seg)
+        public LineString ModifySegment(LineString seg)
         {
             if (seg.Length < 0.01f)
             {
-                Debug.Log("segment crosses m_boundary or length is too small, rejecting...");
-                return false;
+                Debug.Log("segment length is too small, rejecting...");
+                return null;
             }
-            return true;
+
+            if (m_boundary != null && seg.Intersects(m_boundary))
+            {
+                Debug.Log("segment crosses m_boundary, rejecting...");
+                return null;
+            }
+
+            if (!IsCurrentTracingValid(seg))
+            {
+                return null;
+            }
+
+            // modify segment
+            Coordinate endPt = seg[1];
+            KdNode<SeedPoint> cloest = m_placedPoints.NearestNeighbor(endPt);
+
+            if(cloest.Coordinate.Distance(endPt) < m_snapThreshold)
+            {
+                Coordinate newEndPt = cloest.Coordinate;
+                return new LineString(new Coordinate[] { seg[0], newEndPt });
+            }
+
+            return seg;
         }
 
         public List<SeedPoint> GetCandiatePoints(SeedPoint pt)
@@ -165,8 +194,6 @@ namespace tracing.StreamLineVis
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
         public float GetPriorityValue(Coordinate pos)
         {
             Coordinate centre = new Coordinate(10, 10);
@@ -202,11 +229,6 @@ namespace tracing.StreamLineVis
             return dir;
         }
 
-        public LineString ModifySegment(LineString seg)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool IsAngleValid(Coordinate vec, Coordinate vec1)
         {
             double sqrxy = vec.X * vec1.X + vec.Y * vec1.Y;
@@ -222,9 +244,9 @@ namespace tracing.StreamLineVis
         {
 
             var fields = new AddedField(TensorFieldProvider.GetTensorField());
-            var pos = new Coordinate(12, 12);
+            var pos = new Coordinate(6, 6);
             var startpt = new SeedPoint(pos);
-            m_generator = new RoadMapGenerator(fields, startpt, 2,30);
+            m_generator = new RoadMapGenerator(fields, startpt, null, 5,30,10);
             m_generator.Iterate();
             m_generator.Draw();
         }

@@ -10,6 +10,7 @@ using NetTopologySuite.Geometries;
 public static class Utils
 {
     public const string CROSS = "cross";
+    public const string LSHAPE = "lshape";
 
     public static Coordinate[] PopulatePointsOnGrid(float width,int x=20, int y=20)
     {
@@ -73,6 +74,11 @@ public static class Utils
             {
                 Debug.DrawLine(pt1, pt2, Color.red);
                 Debug.DrawLine(pt3, pt4, Color.blue);
+            }
+            else if (shape.Equals(LSHAPE))
+            {
+                Debug.DrawLine(pos3d, pt1, Color.red);
+                Debug.DrawLine(pos3d, pt3, Color.blue);
             }
         }
     }

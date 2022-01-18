@@ -14,14 +14,14 @@ public static class TensorFieldProvider
     public static ITensorField[] GetTensorField()
     {
         // rad
-        RadialTensorField rad = new RadialTensorField(new Coordinate(0, 0));
+        RadialTensorField radField = new RadialTensorField(new Coordinate(8, 10),2);
         // polyline
-        Coordinate[] coords = new Coordinate[] { new Coordinate(0, 0), new Coordinate(8, 2), new Coordinate(20, 12), new Coordinate(40, 19) };
-        PolylineField poly = new PolylineField(coords, 0.08);
+        Coordinate[] coords = new Coordinate[] { new Coordinate(0, 0), new Coordinate(8, 2), new Coordinate(20, 12), new Coordinate(40, 19),new Coordinate(41,25) };
+        PolylineField polyField = new PolylineField(coords, 0.08);
         // grid
         double ang = (44f / 180f) * Math.PI;
-        GridTensorField grid = new GridTensorField(ang, 1, 1);
-        return new ITensorField[] {poly,grid};
+        GridTensorField gridField = new GridTensorField(ang, 1, 0.1);
+        return new ITensorField[] { polyField, gridField };
     }
 }
 
@@ -55,12 +55,11 @@ public class TensorFieldVis : MonoBehaviour
 
     }
 
-    // Update is called once per frame
     void Update()
     {
         //toDraw.DrawDebugShape();
         added.DrawDebugShape();
-        Utils.DrawShapeOnPositions(pts, vecs, (pt,vec)=> Utils.DrawShapeOnPosition(pt,vec,"cross"));
+        Utils.DrawShapeOnPositions(pts, vecs, (pt,vec)=> Utils.DrawShapeOnPosition(pt,vec,"lshape"));
         //streamLine.Trace();
         //streamLine.Draw();
     }

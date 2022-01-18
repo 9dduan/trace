@@ -25,8 +25,9 @@ namespace tracing.StreamLineVis
         private double m_stepLength;
         private double m_maxSingleTracingLength;
         private Polygon m_boundary;
+        private int m_maxTracedLines;
 
-        public RoadMapGenerator(AddedField combinedFields, SeedPoint startPoint, double stepLength, double maxLength)
+        public RoadMapGenerator(AddedField combinedFields, SeedPoint startPoint, double stepLength, double maxLength,int maxTracedLines=20)
         {
             m_combinedFields = combinedFields;
             m_startingSeedPoint = startPoint;
@@ -35,6 +36,7 @@ namespace tracing.StreamLineVis
             m_candidatesQueue = new PrioQueue.PriorityQueue<SeedPoint>(1000, new SeedComparor());
             m_placedPoints = new KdTree<SeedPoint>();
             m_generatedLines = new List<List<LineString>>();
+            m_maxTracedLines = maxTracedLines;
         }
 
         public void Draw()
@@ -46,13 +48,10 @@ namespace tracing.StreamLineVis
                 int i = 0;
                 foreach (var l in m_generatedLines)
                 {
-                    if (i > 2)
-                    {
-                        i = 0;
-                    }
-
+                    if (i > 2) i = 0;
                     var currColor = colors[i];
                     i += 1;
+
                     foreach (var seg in l)
                     {
                         Utils.DrawLineString(seg, currColor);
@@ -66,7 +65,10 @@ namespace tracing.StreamLineVis
             }
         }
 
-        public void iterate()
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Iterate()
         {
             // set starting conditions
             m_candidatesQueue.push(m_startingSeedPoint);
@@ -74,7 +76,7 @@ namespace tracing.StreamLineVis
             m_placedPoints.Insert(m_startingSeedPoint.Pos, m_startingSeedPoint);
             int maxInterative = 0;
 
-            while (m_candidatesQueue.Count > 0 && maxInterative <10)
+            while (m_candidatesQueue.Count > 0 && maxInterative <m_maxTracedLines)
             {
                 maxInterative += 1;
                 SeedPoint currPt = m_candidatesQueue.pop();
@@ -214,29 +216,16 @@ namespace tracing.StreamLineVis
 
     public class StreamLineVis : MonoBehaviour
     {
-
-        
-        private AddedField added;
         private RoadMapGenerator m_generator;
-        //private SeedProvider provider;
 
         private void Start()
         {
-            //Pqueue test
-
-            var pq = new PrioQueue.PriorityQueue<SeedPoint>(1000, new SeedComparor());
-            pq.push(new SeedPoint(new Coordinate(0, 0)) { PriorityValue = 10 });
-            pq.push(new SeedPoint(new Coordinate(0, 0)) { PriorityValue = 1 });
-            pq.push(new SeedPoint(new Coordinate(0, 0)) { PriorityValue = 4 });
-
-            var P = pq.pop();
-            Console.WriteLine(P.ToString());
 
             var fields = new AddedField(TensorFieldProvider.GetTensorField());
             var pos = new Coordinate(12, 12);
             var startpt = new SeedPoint(pos);
-            m_generator = new RoadMapGenerator(fields, startpt, 5,30);
-            m_generator.iterate();
+            m_generator = new RoadMapGenerator(fields, startpt, 2,30);
+            m_generator.Iterate();
             m_generator.Draw();
         }
 

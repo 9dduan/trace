@@ -20,7 +20,7 @@ namespace tracing.StreamLineVis
         private SeedPoint m_startingSeedPoint;
         private AddedField m_combinedFields;
         private PrioQueue.PriorityQueue<SeedPoint> m_candidatesQueue;
-        private KdTree<SeedPoint> m_placedPoints;
+        private KdTree<TracePoint> m_placedPoints;
         private List<List<LineString>> m_generatedLines;
         private List<LineString> m_currentTracingLine;
         private EigenType m_currentTracingEigenType;
@@ -38,7 +38,7 @@ namespace tracing.StreamLineVis
             m_stepLength = stepLength;
             m_maxSingleTracingLength = maxLength;
             m_candidatesQueue = new PrioQueue.PriorityQueue<SeedPoint>(1000, new SeedComparor());
-            m_placedPoints = new KdTree<SeedPoint>();
+            m_placedPoints = new KdTree<TracePoint>();
             m_generatedLines = new List<List<LineString>>();
             m_maxTracedLines = maxTracedLines;
             m_boundary = boundary;
@@ -84,10 +84,17 @@ namespace tracing.StreamLineVis
             while (m_candidatesQueue.Count > 0 && iterativeCount <m_maxTracedLines)
             {
                 iterativeCount += 1;
-                SeedPoint currPt = m_candidatesQueue.pop();
+
+                TracePoint currPt = m_candidatesQueue.pop();
                 Coordinate currDir = GetDirFromPosAndEigenType(currPt.Pos, m_currentTracingEigenType);
+                if (!((SeedPoint)currPt).IsForward)
+                {
+                    currDir = currDir.Multiplication(-1);
+                }
+
                 m_currentTracingLine = new List<LineString>();
                 m_currentTracingLength = 0f;
+
                 Debug.Log($"Start new line from point {currPt.Pos.X} - {currPt.Pos.Y} direction {currDir.X} - {currDir.Y}");
 
                 int count = 0;
@@ -96,20 +103,22 @@ namespace tracing.StreamLineVis
                     // trace current single streamline
 
                     count += 1;
-                    var nextPt = GetNextPoint(currPt, currDir, true);
-                    var backward_nextPt = GetNextPoint(currPt, currDir, false);
-
-                    LineString currSeg = new LineString(new Coordinate[] { currPt.Pos, nextPt.Pos });
+                    // var nextPt = GetNextPoint(currPt, currDir, true);
+                    // var backward_nextPt = GetNextPoint(currPt, currDir, false);
+                    Coordinate nextPos = GetNextPos(currPt.Pos, currDir);
+                    LineString currSeg = new LineString(new Coordinate[] { currPt.Pos, nextPos });
 
                     var modifiedSeg = ModifySegment(currSeg);
 
                     if (modifiedSeg != null)
                     {
-                        nextPt = new SeedPoint(modifiedSeg[1], true, m_currentTracingEigenType==EigenType.Minor?EigenType.Major:EigenType.Minor);
-                        var nextDir = GetNextDir(nextPt, currDir);
-
                         m_currentTracingLength += modifiedSeg.Length;
                         m_currentTracingLine.Add(modifiedSeg);
+
+                        // var nextPt = new SeedPoint(modifiedSeg[1], true, m_currentTracingEigenType==EigenType.Minor ? EigenType.Major:EigenType.Minor);
+                        var nextPt = new TracePoint(modifiedSeg[1]);
+                        var nextDir = GetNextDir(nextPt, currDir);
+                       
                         m_placedPoints.Insert(nextPt.Pos, nextPt);
 
                         var newCandidates = GetCandiatePoints(nextPt);
@@ -179,7 +188,7 @@ namespace tracing.StreamLineVis
 
             // modify segment
             Coordinate endPt = seg[1];
-            KdNode<SeedPoint> cloest = m_placedPoints.NearestNeighbor(endPt);
+            KdNode<TracePoint> cloest = m_placedPoints.NearestNeighbor(endPt);
 
             if(cloest.Coordinate.Distance(endPt) < m_snapThreshold)
             {
@@ -193,10 +202,12 @@ namespace tracing.StreamLineVis
         /// <summary>
         /// 
         /// </summary>
-        public List<SeedPoint> GetCandiatePoints(SeedPoint pt)
+        public List<SeedPoint> GetCandiatePoints(TracePoint pt)
         {
-            var p = pt.Clone();
-            return new List<SeedPoint>() { p };
+            var eigen = GetReversedCurrentEigen();
+            var p1 = new SeedPoint(pt.Pos, true, eigen);
+            var p2 = new SeedPoint(pt.Pos, false, eigen);
+            return new List<SeedPoint>() { p1, p2 };
         }
 
         /// <summary>
@@ -207,6 +218,11 @@ namespace tracing.StreamLineVis
             Coordinate centre = new Coordinate(10, 10);
             double dist = centre.Distance(pos);
             return 1/(float)dist;
+        }
+
+        public EigenType GetReversedCurrentEigen()
+        {
+            return m_currentTracingEigenType == EigenType.Major ? EigenType.Minor : EigenType.Major;
         }
 
         public Coordinate GetDirFromPosAndEigenType(Coordinate pos, EigenType eigenType)
@@ -220,14 +236,25 @@ namespace tracing.StreamLineVis
         {
             // if angle between dir and prevDir > 90, reverse dir
 
-            var nextpos = currPt.Pos.Add(currDir.Multiplication(m_stepLength));
+            var nextpos = GetNextPos(currPt.Pos, currDir);
             Debug.Log($"next point distance from curr point is {nextpos.Distance(currPt.Pos)}");
             return new SeedPoint(nextpos, isFoward, m_currentTracingEigenType==EigenType.Major?EigenType.Major:EigenType.Minor);
         }
 
-        public Coordinate GetNextDir(SeedPoint pt,Coordinate prevDir)
+        public Coordinate GetNextPos(Coordinate currPos, Coordinate currDir)
         {
-            Coordinate dir = GetDirFromPosAndEigenType(pt.Pos, m_currentTracingEigenType);
+            var nextpos = currPos.Add(currDir.Multiplication(m_stepLength));
+            return nextpos;
+        }
+
+        public Coordinate GetNextDir(TracePoint pt,Coordinate prevDir)
+        {
+            return GetNextDir(pt.Pos, prevDir);
+        }
+
+        public Coordinate GetNextDir(Coordinate ptPos,Coordinate prevDir)
+        {
+            Coordinate dir = GetDirFromPosAndEigenType(ptPos, m_currentTracingEigenType);
 
             if (!IsAngleValid(prevDir, dir))
             {

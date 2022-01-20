@@ -23,28 +23,33 @@ namespace trace.SeedPoint
         Minor
     }
 
-    public class SeedPoint
+    public class TracePoint
     {
-        public bool IsSeed { get; set; }
+        public Coordinate Pos { get; set; } // position
 
+        public TracePoint(Coordinate pos)
+        {
+            Pos = pos;
+        }
+    }
+
+    public class SeedPoint:TracePoint
+    {
         public bool IsForward { get; set; }
 
         public float PriorityValue { get; set; }
 
         public EigenType EigenType { get; set; }
 
-        public Coordinate Pos { get; set; } // position
-
-        public SeedPoint(Coordinate pos, bool isForward, EigenType eigenType)
-        {
-            Pos = pos;
+        public SeedPoint(Coordinate pos, bool isForward, EigenType eigenType):base(pos)
+        { 
             IsForward = isForward;
             EigenType = eigenType;
         }
 
         public override string ToString()
         {
-            return $"{Pos.ToString()} PriorityValue {PriorityValue} IsSeed {IsSeed}";
+            return $"{Pos.ToString()} PriorityValue {PriorityValue}";
         }
 
         public SeedPoint Clone()
@@ -52,7 +57,6 @@ namespace trace.SeedPoint
             var pt = new SeedPoint(this.Pos, this.IsForward, this.EigenType)
             {
                 PriorityValue = this.PriorityValue,
-                IsSeed = this.IsSeed
             };
 
             return pt;

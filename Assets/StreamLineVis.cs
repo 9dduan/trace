@@ -9,6 +9,9 @@ using MathNet;
 using System;
 using System.Linq;
 using MathNet.Numerics;
+using trace.TensorField;
+using trace.TensorStruct;
+using trace.SeedPoint;
 
 namespace tracing.StreamLineVis
 {
@@ -39,7 +42,7 @@ namespace tracing.StreamLineVis
             m_generatedLines = new List<List<LineString>>();
             m_maxTracedLines = maxTracedLines;
             m_boundary = boundary;
-            m_snapThreshold = 2f;
+            m_snapThreshold = (float)m_stepLength*0.5f;
         }
 
         public void Draw()
@@ -60,7 +63,6 @@ namespace tracing.StreamLineVis
                         Utils.DrawLineString(seg, currColor);
                     }
                 }
-                
             }
             catch
             {
@@ -75,7 +77,7 @@ namespace tracing.StreamLineVis
         {
             // set starting conditions
             m_candidatesQueue.push(m_startingSeedPoint);
-            m_currentTracingEigenType = EigenType.Major;
+            m_currentTracingEigenType = m_startingSeedPoint.EigenType;
             m_placedPoints.Insert(m_startingSeedPoint.Pos, m_startingSeedPoint);
             int iterativeCount = 0;
 
@@ -86,22 +88,25 @@ namespace tracing.StreamLineVis
                 Coordinate currDir = GetDirFromPosAndEigenType(currPt.Pos, m_currentTracingEigenType);
                 m_currentTracingLine = new List<LineString>();
                 m_currentTracingLength = 0f;
-                Debug.Log($"Start new line from point {currPt.Pos.X}-{currPt.Pos.Y} direction {currDir.X}-{currDir.Y}");
+                Debug.Log($"Start new line from point {currPt.Pos.X} - {currPt.Pos.Y} direction {currDir.X} - {currDir.Y}");
 
                 int count = 0;
-                while (count<100)
+                while (count<1000)
                 {
                     // trace current single streamline
+
                     count += 1;
-                    var nextPt = GetNextPoint(currPt, currDir);
-                    var nextDir = GetNextDir(nextPt, currDir);
+                    var nextPt = GetNextPoint(currPt, currDir, true);
+                    var backward_nextPt = GetNextPoint(currPt, currDir, false);
+
                     LineString currSeg = new LineString(new Coordinate[] { currPt.Pos, nextPt.Pos });
+
                     var modifiedSeg = ModifySegment(currSeg);
 
                     if (modifiedSeg != null)
                     {
-                        nextPt = new SeedPoint(modifiedSeg[1]);
-                        nextDir = GetNextDir(nextPt, currDir);
+                        nextPt = new SeedPoint(modifiedSeg[1], true, m_currentTracingEigenType==EigenType.Minor?EigenType.Major:EigenType.Minor);
+                        var nextDir = GetNextDir(nextPt, currDir);
 
                         m_currentTracingLength += modifiedSeg.Length;
                         m_currentTracingLine.Add(modifiedSeg);
@@ -185,9 +190,12 @@ namespace tracing.StreamLineVis
             return seg;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public List<SeedPoint> GetCandiatePoints(SeedPoint pt)
         {
-            var p = new SeedPoint(pt.Pos) { PriorityValue = GetPriorityValue(pt.Pos)};
+            var p = pt.Clone();
             return new List<SeedPoint>() { p };
         }
 
@@ -208,13 +216,13 @@ namespace tracing.StreamLineVis
             return dir;
         }
 
-        public SeedPoint GetNextPoint(SeedPoint currPt, Coordinate currDir)
+        public SeedPoint GetNextPoint(SeedPoint currPt, Coordinate currDir, bool isFoward)
         {
             // if angle between dir and prevDir > 90, reverse dir
 
             var nextpos = currPt.Pos.Add(currDir.Multiplication(m_stepLength));
             Debug.Log($"next point distance from curr point is {nextpos.Distance(currPt.Pos)}");
-            return new SeedPoint(nextpos);
+            return new SeedPoint(nextpos, isFoward, m_currentTracingEigenType==EigenType.Major?EigenType.Major:EigenType.Minor);
         }
 
         public Coordinate GetNextDir(SeedPoint pt,Coordinate prevDir)
@@ -242,11 +250,10 @@ namespace tracing.StreamLineVis
 
         private void Start()
         {
-
-            var fields = new AddedField(TensorFieldProvider.GetTensorField());
+            var fields = new AddedField(TensorFieldProvider.GetPresetTensorFields());
             var pos = new Coordinate(6, 6);
-            var startpt = new SeedPoint(pos);
-            m_generator = new RoadMapGenerator(fields, startpt, null, 5,30,10);
+            var startpt = new SeedPoint(pos, true, EigenType.Major);
+            m_generator = new RoadMapGenerator(fields, startpt, null, 4,50,80);
             m_generator.Iterate();
             m_generator.Draw();
         }

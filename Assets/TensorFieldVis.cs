@@ -8,10 +8,12 @@ using MathNet;
 using System;
 using System.Linq;
 using MathNet.Numerics;
+using trace.TensorStruct;
+using trace.TensorField;
 
 public static class TensorFieldProvider
 {
-    public static ITensorField[] GetTensorField()
+    public static ITensorField[] GetPresetTensorFields()
     {
         // rad
         RadialTensorField radField = new RadialTensorField(new Coordinate(8, 10),0.1);
@@ -24,7 +26,7 @@ public static class TensorFieldProvider
         double ang = (44f / 180f) * Math.PI;
         GridTensorField gridField = new GridTensorField(ang, 1, 0.1);
 
-        return new ITensorField[] {gridField, polyField };
+        return new ITensorField[] {polyField};
     }
 }
 
@@ -39,7 +41,7 @@ public class TensorFieldVis : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        added = new AddedField(TensorFieldProvider.GetTensorField());
+        added = new AddedField(TensorFieldProvider.GetPresetTensorFields());
 
         pts = Utils.PopulatePointsOnGrid(2);
 

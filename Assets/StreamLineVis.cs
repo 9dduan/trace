@@ -19,7 +19,7 @@ namespace tracing.StreamLineVis
 {
     public class RoadMapGenerator : MonoBehaviour
     {
-        private IPriorityCalculator m_priorityCalc;
+        private IPriorityCalculator m_priorityCalc = new RdmPriorityCalculator();
         private SeedPoint m_startingSeedPoint;
         private AddedField m_combinedFields;
         private PrioQueue.PriorityQueue<SeedPoint> m_candidatesQueue;
@@ -225,8 +225,8 @@ namespace tracing.StreamLineVis
             var eigen = Extension.SwitchEigen(m_currentTracingEigenType);
             System.Random r1 = new System.Random();
 
-            var p1 = new SeedPoint(pt.Pos, true, eigen)  { PriorityValue = r1.Next(0,10) };
-            var p2 = new SeedPoint(pt.Pos, false, eigen) { PriorityValue = r1.Next(0,10) };
+            var p1 = new SeedPoint(pt.Pos, true, eigen)  { PriorityValue = m_priorityCalc.GetPriorityValue(pt.Pos) };
+            var p2 = new SeedPoint(pt.Pos, false, eigen) { PriorityValue = m_priorityCalc.GetPriorityValue(pt.Pos) };
             return new List<SeedPoint>() { p1, p2 };
         }
 

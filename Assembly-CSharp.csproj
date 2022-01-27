@@ -63,13 +63,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\IPriorityCalculator.cs" />
     <Compile Include="Assets\PrioQueue\PrioQueue.cs" />
+    <Compile Include="Assets\SeedPoint.cs" />
     <Compile Include="Assets\StreamLineVis.cs" />
     <Compile Include="Assets\Tensor.cs" />
     <Compile Include="Assets\TensorField.cs" />
     <Compile Include="Assets\TensorFieldVis.cs" />
     <Compile Include="Assets\Test\Testor.cs" />
-    <Compile Include="Assets\SeedPoint.cs" />
     <Compile Include="Assets\Utils\Utils.cs" />
     <None Include="Assets\Packages\System.Memory.4.5.3\version.txt" />
     <None Include="Assets\Packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.xml" />

@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using MathNet.Numerics;
 using trace.TensorStruct;
+using trace.SeedPoint;
 
 namespace trace.TensorField
 {
@@ -17,20 +18,24 @@ namespace trace.TensorField
     {
         void Combine(ITensorField field); // combine current tensor field with another one
         Tensor SampleAtPos(Coordinate pos); // return tensor at given position
+        double decay { get; set; }
         void DrawDebugShape();
     }
 
     // radial tensor field
-    // todo consider if radial field needs decay according with distance from sample point to center
     public class RadialTensorField : MonoBehaviour, ITensorField
     {
         private Coordinate m_cent;
         private double m_decay;
         private bool m_isHidden = true;
 
+        public double decay { get; set; }
+
         public RadialTensorField(Coordinate _cent, double _decay = 0)
         {
             m_cent = _cent;
+            decay = _decay;
+            m_decay = _decay;
         }
 
         public void Combine(ITensorField tensorField)
@@ -72,6 +77,8 @@ namespace trace.TensorField
             tensor = _length * Tensor.FromRTheta(_r, _theta);
         }
 
+        public double decay { get; set; }
+
         public void Combine(ITensorField tensorField)
         {
             throw new System.Exception();
@@ -93,7 +100,7 @@ namespace trace.TensorField
     {
         private LineString polyline;
         private List<LineSegment> lineSegments = new List<LineSegment>();
-        double decay;
+        public double decay { get; set; }
 
         public PolylineField(Coordinate[] coords, double _decay = 0)
         {
@@ -108,12 +115,10 @@ namespace trace.TensorField
                     var end = polyline.Coordinates[i + 1];
                     lineSegments.Add(new LineSegment(start, end));
                 }
-                Console.WriteLine(lineSegments.Count());
-                //lineSegments = segs.ToArray();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Debug.Log(e.Message);
             }
         }
 
@@ -157,6 +162,8 @@ namespace trace.TensorField
             throw new NotImplementedException();
         }
 
+        public double decay { get; set; }
+
         public Tensor SampleAtPos(Coordinate pos)
         {
             throw new NotImplementedException();
@@ -166,6 +173,8 @@ namespace trace.TensorField
     public class AddedField : ITensorField
     {
         private List<ITensorField> fields;
+
+        public double decay { get; set; }
 
         public AddedField(IEnumerable<ITensorField> _fields)
         {
@@ -231,6 +240,11 @@ namespace trace.TensorField
         {
             double sqrtSum = Math.Sqrt(vec.X * vec.X + vec.Y * vec.Y);
             return vec.Multiplication(1 / sqrtSum);
+        }
+
+        public static EigenType SwitchEigen(EigenType eigen)
+        {
+            return eigen == EigenType.Major ? EigenType.Minor : EigenType.Major;
         }
     }
 }

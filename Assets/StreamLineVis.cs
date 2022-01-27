@@ -8,15 +8,18 @@ using UnityEngine;
 using MathNet;
 using System;
 using System.Linq;
+using System.Threading;
 using MathNet.Numerics;
 using trace.TensorField;
 using trace.TensorStruct;
 using trace.SeedPoint;
+using trace.PriorityCalculator;
 
 namespace tracing.StreamLineVis
 {
     public class RoadMapGenerator : MonoBehaviour
     {
+        private IPriorityCalculator m_priorityCalc;
         private SeedPoint m_startingSeedPoint;
         private AddedField m_combinedFields;
         private PrioQueue.PriorityQueue<SeedPoint> m_candidatesQueue;
@@ -73,7 +76,7 @@ namespace tracing.StreamLineVis
         /// <summary>
         /// 
         /// </summary>
-        public void Iterate()
+        public IEnumerator Iterate()
         {
             // set starting conditions
             m_candidatesQueue.push(m_startingSeedPoint);
@@ -83,15 +86,38 @@ namespace tracing.StreamLineVis
 
             while (m_candidatesQueue.Count > 0 && iterativeCount <m_maxTracedLines)
             {
-                iterativeCount += 1;
+                yield return new WaitForSeconds(0.5f);
 
-                TracePoint currPt = m_candidatesQueue.pop();
-                Coordinate currDir = GetDirFromPosAndEigenType(currPt.Pos, m_currentTracingEigenType);
-                if (!((SeedPoint)currPt).IsForward)
+                iterativeCount += 1;
+                
+                var seed = m_candidatesQueue.pop();
+                List<SeedPoint> poped = new List<SeedPoint>();
+
+                while (seed.EigenType != m_currentTracingEigenType)
                 {
-                    currDir = currDir.Multiplication(-1);
+                    poped.Add(seed);
+                    seed = m_candidatesQueue.pop();
                 }
 
+                foreach(var p in poped)
+                {
+                    m_candidatesQueue.push(p);
+                }
+
+                if(seed.EigenType!= m_currentTracingEigenType)
+                {
+                    Debug.Log($"{seed.EigenType}-{m_currentTracingEigenType}");
+                }
+                
+
+                Coordinate currDir = GetDirFromPosAndEigenType(seed.Pos, m_currentTracingEigenType);
+
+                if (!(seed.IsForward))
+                {
+                    currDir = currDir.Reverse();
+                }
+
+                TracePoint currPt = new TracePoint(seed.Pos);
                 m_currentTracingLine = new List<LineString>();
                 m_currentTracingLength = 0f;
 
@@ -103,8 +129,7 @@ namespace tracing.StreamLineVis
                     // trace current single streamline
 
                     count += 1;
-                    // var nextPt = GetNextPoint(currPt, currDir, true);
-                    // var backward_nextPt = GetNextPoint(currPt, currDir, false);
+
                     Coordinate nextPos = GetNextPos(currPt.Pos, currDir);
                     LineString currSeg = new LineString(new Coordinate[] { currPt.Pos, nextPos });
 
@@ -145,14 +170,7 @@ namespace tracing.StreamLineVis
                 m_generatedLines.Add(m_currentTracingLine);
 
                 // switch tracing Eigen
-                if (m_currentTracingEigenType == EigenType.Major)
-                {
-                    m_currentTracingEigenType = EigenType.Minor;
-                }
-                else
-                {
-                    m_currentTracingEigenType = EigenType.Major;
-                }
+                m_currentTracingEigenType = Extension.SwitchEigen(m_currentTracingEigenType);
             }
 
             Debug.Log($"{m_generatedLines.Count()} pieces of stream lines created...");
@@ -204,9 +222,11 @@ namespace tracing.StreamLineVis
         /// </summary>
         public List<SeedPoint> GetCandiatePoints(TracePoint pt)
         {
-            var eigen = GetReversedCurrentEigen();
-            var p1 = new SeedPoint(pt.Pos, true, eigen);
-            var p2 = new SeedPoint(pt.Pos, false, eigen);
+            var eigen = Extension.SwitchEigen(m_currentTracingEigenType);
+            System.Random r1 = new System.Random();
+
+            var p1 = new SeedPoint(pt.Pos, true, eigen)  { PriorityValue = r1.Next(0,10) };
+            var p2 = new SeedPoint(pt.Pos, false, eigen) { PriorityValue = r1.Next(0,10) };
             return new List<SeedPoint>() { p1, p2 };
         }
 
@@ -217,7 +237,7 @@ namespace tracing.StreamLineVis
         {
             Coordinate centre = new Coordinate(10, 10);
             double dist = centre.Distance(pos);
-            return 1/(float)dist;
+            return Mathf.Exp(-(float)dist*(float)dist);
         }
 
         public EigenType GetReversedCurrentEigen()
@@ -238,7 +258,7 @@ namespace tracing.StreamLineVis
 
             var nextpos = GetNextPos(currPt.Pos, currDir);
             Debug.Log($"next point distance from curr point is {nextpos.Distance(currPt.Pos)}");
-            return new SeedPoint(nextpos, isFoward, m_currentTracingEigenType==EigenType.Major?EigenType.Major:EigenType.Minor);
+            return new SeedPoint(nextpos, isFoward, Extension.SwitchEigen(m_currentTracingEigenType));
         }
 
         public Coordinate GetNextPos(Coordinate currPos, Coordinate currDir)
@@ -280,9 +300,8 @@ namespace tracing.StreamLineVis
             var fields = new AddedField(TensorFieldProvider.GetPresetTensorFields());
             var pos = new Coordinate(6, 6);
             var startpt = new SeedPoint(pos, true, EigenType.Major);
-            m_generator = new RoadMapGenerator(fields, startpt, null, 4,50,80);
-            m_generator.Iterate();
-            m_generator.Draw();
+            m_generator = new RoadMapGenerator(fields, startpt, null, 4, 50, 80);
+            StartCoroutine(m_generator.Iterate());
         }
 
         private void Update()

@@ -7,7 +7,6 @@ using NetTopologySuite.Algorithm;
 using NetTopologySuite.Index.KdTree;
 using UnityEngine;
 using MathNet;
-using System;
 using System.Linq;
 using System.Threading;
 using MathNet.Numerics;
@@ -20,6 +19,8 @@ namespace trace.PriorityCalculator
     public interface IPriorityCalculator
     {
         float GetPriorityValue(Coordinate pos);
+
+        // TODO make a shared combine method
     }
 
     public class RdmPriorityCalculator : IPriorityCalculator
@@ -41,4 +42,27 @@ namespace trace.PriorityCalculator
             return Mathf.Exp(-dist * dist);
         }
     }
+
+    public class AddedPriorityCalculator : IPriorityCalculator
+    {
+        private IPriorityCalculator[] m_priorityCalculators;
+        
+        public float GetPriorityValue(Coordinate pos)
+        {
+            float res = 0;
+
+            foreach(var calc in m_priorityCalculators)
+            {
+                res += calc.GetPriorityValue(pos);
+            }
+
+            return res;
+        }
+
+        public AddedPriorityCalculator(IPriorityCalculator[] priorityCalculators)
+        {
+            m_priorityCalculators = priorityCalculators;
+        }
+    }
+
 }

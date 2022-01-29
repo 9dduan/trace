@@ -140,7 +140,6 @@ namespace tracing.StreamLineVis
                         m_currentTracingLength += modifiedSeg.Length;
                         m_currentTracingLine.Add(modifiedSeg);
 
-                        // var nextPt = new SeedPoint(modifiedSeg[1], true, m_currentTracingEigenType==EigenType.Minor ? EigenType.Major:EigenType.Minor);
                         var nextPt = new TracePoint(modifiedSeg[1]);
                         var nextDir = GetNextDir(nextPt, currDir);
                        
@@ -300,7 +299,7 @@ namespace tracing.StreamLineVis
             var fields = new AddedField(TensorFieldProvider.GetPresetTensorFields());
             var pos = new Coordinate(6, 6);
             var startpt = new SeedPoint(pos, true, EigenType.Major);
-            m_generator = new RoadMapGenerator(fields, startpt, null, 4, 50, 80);
+            m_generator = new RoadMapGenerator(fields, startpt, null, 4, 50, 180);
             StartCoroutine(m_generator.Iterate());
         }
 
@@ -309,7 +308,7 @@ namespace tracing.StreamLineVis
             m_generator.Draw();
         }
 
-        private IEnumerator waitforsec()
+        private IEnumerator WaitForSeconds()
         {
             yield return new WaitForSeconds(1);
         }

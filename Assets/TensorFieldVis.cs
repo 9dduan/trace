@@ -35,9 +35,8 @@ public class TensorFieldVis : MonoBehaviour
     AddedField added;
     Coordinate[] pts;
     Coordinate[] vecs;
+    LinearRing m_boundary;
 
-    //visualize a tensorfield
-    // Start is called before the first frame update
     void Start()
     {
         added = new AddedField(TensorFieldProvider.GetPresetTensorFields());
@@ -53,11 +52,13 @@ public class TensorFieldVis : MonoBehaviour
                 tensor.EigenVectors(out major, out minor);
                 return major;
             }).ToArray();
+
     }
 
     void Update()
     {
         added.DrawDebugShape();
+        Utils.DrawLineString(m_boundary, Color.cyan);
         Utils.DrawShapeOnPositions(pts, vecs, (pt, vec) => Utils.DrawShapeOnPosition(pt, vec, "lshape"));
     }
 }

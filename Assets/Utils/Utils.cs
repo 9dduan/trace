@@ -12,6 +12,7 @@ public static class Utils
     public const string CROSS = "cross";
     public const string LSHAPE = "lshape";
 
+    // create grid and mesh on grid
     public static Coordinate[] PopulatePointsOnGrid(float width,int x=20, int y=20)
     {
         // draw dumb grid of points, consider use a topology lib such as shapely to implement this
@@ -27,6 +28,25 @@ public static class Utils
         }
 
         return res;
+    }
+
+    public static void GenerateMesh(Coordinate[] coordinates)
+    {
+        GameObject obj = new GameObject();
+        MeshFilter meshFilter = obj.AddComponent<MeshFilter>();
+
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+        MeshRenderer renderer = obj.AddComponent<MeshRenderer>();
+
+        Material mat = new Material(Shader.Find("Standard"));
+        mat.color = Color.green;
+        renderer.material = mat;
+    }
+
+    public static Coordinate[] PopulatePointsInsideBoundary(LinearRing boundary, float interval)
+    {
+        throw new NotImplementedException();
     }
 
     public static void DrawShapeOnPositions(Coordinate[] pos, Coordinate[] vecs, Action<Coordinate, Coordinate> func)
@@ -170,6 +190,7 @@ public class DrawLine : MonoBehaviour
     {
         // draw dumb grid of points, consider use a topology lib such as shapely to implement this
         int num = 50;
+
         Vector3[] res = new Vector3[100];
 
         //spaw grid of points

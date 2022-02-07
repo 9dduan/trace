@@ -103,8 +103,6 @@ public static class Utils
         }
     }
 
-
-
     public static void DrawLineString(LineString geom, Color color)
     {
         if (geom == null)

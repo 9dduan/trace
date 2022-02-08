@@ -1,0 +1,46 @@
+﻿<Properties StartupConfiguration="{A884B12D-14E8-E73D-E0A1-9FC4D2A8D080}|">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/TerrainGeneration/Noise/MapGenerator.cs">
+    <Files>
+      <File FileName="Assets/StreamLineVis.cs" Line="170" Column="1" IsPinned="True" />
+      <File FileName="Assets/Utils/Utils.cs" Line="105" Column="1" />
+      <File FileName="Assets/PrioQueue/PrioQueue.cs" />
+      <File FileName="Assets/IPriorityCalculator.cs" Line="13" Column="25" />
+      <File FileName="Assets/TerrainGeneration/Noise/Noise.cs" Line="14" Column="18" />
+      <File FileName="Assets/TensorField 1/Tensor/Tensor.cs" Line="1" Column="1" />
+      <File FileName="Assets/TerrainGeneration/Noise/MapGenerator.cs" Line="18" Column="83" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="tracing" expanded="True">
+            <Node name="Assets" expanded="True">
+              <Node name="TensorField 1" expanded="True">
+                <Node name="Tensor" expanded="True" />
+              </Node>
+              <Node name="TerrainGeneration" expanded="True">
+                <Node name="Noise" expanded="True">
+                  <Node name="MapGenerator.cs" selected="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+      <Pad Id="MonoDevelop.UnitTesting.TestPad">
+        <State name="__root__">
+          <Node name="tracing" expanded="True" selected="True" />
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="335c2dbf-257a-4369-9762-882e9e8075d6" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

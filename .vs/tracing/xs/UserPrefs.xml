@@ -1,27 +1,30 @@
 ﻿<Properties StartupConfiguration="{A884B12D-14E8-E73D-E0A1-9FC4D2A8D080}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/TerrainGeneration/Noise/MapGenerator.cs">
+  <MonoDevelop.Ide.Workbench>
     <Files>
       <File FileName="Assets/StreamLineVis.cs" Line="170" Column="1" IsPinned="True" />
-      <File FileName="Assets/Utils/Utils.cs" Line="105" Column="1" />
-      <File FileName="Assets/PrioQueue/PrioQueue.cs" />
+      <File FileName="Assets/PrioQueue/PrioQueue.cs" Line="1" Column="1" />
       <File FileName="Assets/IPriorityCalculator.cs" Line="13" Column="25" />
-      <File FileName="Assets/TerrainGeneration/Noise/Noise.cs" Line="14" Column="18" />
-      <File FileName="Assets/TensorField 1/Tensor/Tensor.cs" Line="1" Column="1" />
-      <File FileName="Assets/TerrainGeneration/Noise/MapGenerator.cs" Line="18" Column="83" />
+      <File FileName="Assets/TerrainGeneration/Noise/Noise.cs" Line="15" Column="48" />
+      <File FileName="Assets/TerrainGeneration/Noise/MapGenerator.cs" Line="25" Column="45" />
+      <File FileName="Assets/TerrainGeneration/Noise/MapDisplay.cs" Line="1" Column="1" />
+      <File FileName="Assets/TerrainGeneration/Editor/MapGeneratorEditor.cs" Line="9" Column="42" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="tracing" expanded="True">
             <Node name="Assets" expanded="True">
+              <Node name="PrioQueue" expanded="True" />
               <Node name="TensorField 1" expanded="True">
                 <Node name="Tensor" expanded="True" />
               </Node>
               <Node name="TerrainGeneration" expanded="True">
+                <Node name="Editor" expanded="True" />
                 <Node name="Noise" expanded="True">
-                  <Node name="MapGenerator.cs" selected="True" />
+                  <Node name="Noise.cs" selected="True" />
                 </Node>
               </Node>
+              <Node name="Utils" expanded="True" />
             </Node>
           </Node>
         </State>
